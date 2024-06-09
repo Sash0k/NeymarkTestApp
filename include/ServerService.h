@@ -29,11 +29,12 @@ class ServerService
     // PID file
     std::string _filename { "/tmp/server.pid" };
     // Loop status
-    bool _loop { true };
-
+    bool _loop { true };	
     void processMessage(); ///< Process incomming request
     void setPidFile();     ///< Create PID file
     int getPidFile();      ///< Read PID file
+	
+    static void sigHandler(int sig); ///< Handle system signals
 
   public:
     ServerService();  ///< Constructor

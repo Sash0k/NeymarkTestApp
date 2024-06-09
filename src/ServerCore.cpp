@@ -21,6 +21,15 @@ namespace ORU
 ServerService::ServerService()
 	: _addrlen(sizeof(_address))
 {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = sigHandler;
+    sigset_t set; 
+    sigemptyset(&set);                                                             
+    sigaddset(&set, SIGINT); 
+    act.sa_mask = set;
+		
+    sigaction(SIGINT, &act, 0);
 }
 
 /**
@@ -28,6 +37,19 @@ ServerService::ServerService()
  */
 ServerService::~ServerService()
 {
+}
+
+/**
+ * @brief Демонстрация обработки системных сигналов
+ */
+void ServerService::sigHandler(int sig)
+{
+	Logger::redirect cout_redir(std::cout);
+	
+    if(sig == SIGINT)
+		cout << "ServerCore receive SIGINT!" << endl;
+	else
+		cout << "ServerCore receive signal: " + std::to_string(sig) << endl;
 }
 
 /**
@@ -256,5 +278,4 @@ int ServerService::quit()
     kill(pid, 9);
     return 0;
 }
-
 } // namespace ORU
