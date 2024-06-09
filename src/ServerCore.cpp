@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 
+#include "Logger.h"
 #include "ServerService.h"
 #include "Transport.h"
 
@@ -76,6 +77,8 @@ void ServerService::destroyCommunicationServices()
  */
 void ServerService::processMessage()
 {
+	Logger::redirect cout_redir(std::cout);
+	
     char buffer[128];
     int numBytes = read(_clientFd, buffer, sizeof(buffer));
     cout << "Received " << numBytes << " bytes" << endl;
@@ -122,6 +125,8 @@ void ServerService::processMessage()
  */
 void ServerService::setPidFile()
 {
+	Logger::redirect cerr_redir(std::cerr);
+	
     FILE* f;
 
     f = fopen(_filename.c_str(), "w+");
@@ -132,7 +137,7 @@ void ServerService::setPidFile()
     }
     else
     {
-        cout << "Failed to set PID to file" << endl;
+        cerr << "Failed to set PID to file" << endl;
     }
 }
 
@@ -143,6 +148,8 @@ void ServerService::setPidFile()
  */
 int ServerService::getPidFile()
 {
+	Logger::redirect cerr_redir(std::cerr);
+	
     FILE* f;
     int pid = -1;
     int res;
@@ -153,7 +160,7 @@ int ServerService::getPidFile()
         res = fscanf(f, "%d", &pid);
         if (EOF == res)
         {
-            cout << "Faied to read PID file" << endl;
+            cerr << "Faied to read PID file" << endl;
         }
         fclose(f);
     }
@@ -172,13 +179,15 @@ int ServerService::getPidFile()
  */
 void ServerService::core()
 {
+	Logger::redirect cerr_redir(std::cerr);
+	
     setPidFile();
     while (_loop)
     {
         _clientFd = accept(_serverFd, (struct sockaddr*)&_address, (socklen_t*)&_addrlen);
         if (_clientFd == -1)
         {
-            cout << "Failed to accept connection" << endl;
+            cerr << "Failed to accept connection" << endl;
             return;
         }
         processMessage();
@@ -194,12 +203,15 @@ void ServerService::core()
  */
 int ServerService::run()
 {
+	Logger::redirect cout_redir(std::cout);
+	Logger::redirect cerr_redir(std::cerr);
+	
     cout << "Server was started" << endl;
 
     int res = createCommunicationServices();
     if (res)
     {
-        cout << "Failed to create communication service" << endl;
+        cerr << "Failed to create communication service" << endl;
         return -1;
     }
 
@@ -208,7 +220,7 @@ int ServerService::run()
     int pid = fork();
     if (pid == -1) // error
     {
-        cout << "Failed to run service" << endl;
+        cerr << "Failed to run service" << endl;
         return -1;
     }
     else if (!pid) // create new process
